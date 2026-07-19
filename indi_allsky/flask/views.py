@@ -2404,6 +2404,8 @@ class ConfigView(FormView):
             'IMAGE_CALIBRATE_FIX_HOLES'      : self.indi_allsky_config.get('IMAGE_CALIBRATE_FIX_HOLES', False),
             'IMAGE_CALIBRATE_HOLE_THOLD'     : self.indi_allsky_config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30),
             'IMAGE_CALIBRATE_MANUAL_OFFSET'  : self.indi_allsky_config.get('IMAGE_CALIBRATE_MANUAL_OFFSET', 0),
+            'IMAGE_HOTPIXEL_REMOVE'          : self.indi_allsky_config.get('IMAGE_HOTPIXEL_REMOVE', False),
+            'IMAGE_HOTPIXEL_THOLD'           : self.indi_allsky_config.get('IMAGE_HOTPIXEL_THOLD', 20),
             'IMAGE_SAVE_FITS_PRE_DARK'       : self.indi_allsky_config.get('IMAGE_SAVE_FITS_PRE_DARK', False),
             'PRIVACY_MODE'                   : self.indi_allsky_config.get('PRIVACY_MODE', False),
             'IMAGE_EXIF_PRIVACY'             : self.indi_allsky_config.get('IMAGE_EXIF_PRIVACY', False),
@@ -3429,6 +3431,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_CALIBRATE_FIX_HOLES']            = bool(request.json['IMAGE_CALIBRATE_FIX_HOLES'])
         self.indi_allsky_config['IMAGE_CALIBRATE_HOLE_THOLD']           = int(request.json['IMAGE_CALIBRATE_HOLE_THOLD'])
         self.indi_allsky_config['IMAGE_CALIBRATE_MANUAL_OFFSET']        = int(request.json['IMAGE_CALIBRATE_MANUAL_OFFSET'])
+        self.indi_allsky_config['IMAGE_HOTPIXEL_REMOVE']                = bool(request.json['IMAGE_HOTPIXEL_REMOVE'])
+        self.indi_allsky_config['IMAGE_HOTPIXEL_THOLD']                 = int(request.json['IMAGE_HOTPIXEL_THOLD'])
         self.indi_allsky_config['IMAGE_SAVE_FITS_PRE_DARK']             = bool(request.json['IMAGE_SAVE_FITS_PRE_DARK'])
         self.indi_allsky_config['PRIVACY_MODE']                         = bool(request.json['PRIVACY_MODE'])
         self.indi_allsky_config['IMAGE_EXIF_PRIVACY']                   = bool(request.json['IMAGE_EXIF_PRIVACY'])
@@ -7594,6 +7598,8 @@ class ImageProcessingView(TemplateView):
             'IMAGE_CALIBRATE_FIX_HOLES'      : self.indi_allsky_config.get('IMAGE_CALIBRATE_FIX_HOLES', False),
             'IMAGE_CALIBRATE_HOLE_THOLD'     : self.indi_allsky_config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30),
             'IMAGE_CALIBRATE_MANUAL_OFFSET'  : self.indi_allsky_config.get('IMAGE_CALIBRATE_MANUAL_OFFSET', 0),
+            'IMAGE_HOTPIXEL_REMOVE'          : self.indi_allsky_config.get('IMAGE_HOTPIXEL_REMOVE', False),
+            'IMAGE_HOTPIXEL_THOLD'           : self.indi_allsky_config.get('IMAGE_HOTPIXEL_THOLD', 20),
             'IMAGE_LABEL_TEMPLATE'           : self.indi_allsky_config.get('IMAGE_LABEL_TEMPLATE', ''),
             'IMAGE_EXTRA_TEXT'               : self.indi_allsky_config.get('IMAGE_EXTRA_TEXT'),
             'IMAGE_LABEL_SYSTEM'             : '',
@@ -7804,6 +7810,8 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_CALIBRATE_FIX_HOLES']            = bool(request.json['IMAGE_CALIBRATE_FIX_HOLES'])
         p_config['IMAGE_CALIBRATE_HOLE_THOLD']           = int(request.json['IMAGE_CALIBRATE_HOLE_THOLD'])
         p_config['IMAGE_CALIBRATE_MANUAL_OFFSET']        = int(request.json['IMAGE_CALIBRATE_MANUAL_OFFSET'])
+        p_config['IMAGE_HOTPIXEL_REMOVE']                = bool(request.json['IMAGE_HOTPIXEL_REMOVE'])
+        p_config['IMAGE_HOTPIXEL_THOLD']                 = int(request.json['IMAGE_HOTPIXEL_THOLD'])
         p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
         p_config['IMAGE_COLORMAP']                       = str(request.json['IMAGE_COLORMAP'])
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])

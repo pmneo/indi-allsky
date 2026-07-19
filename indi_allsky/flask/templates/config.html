@@ -1358,6 +1358,34 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_HOTPIXEL_REMOVE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_HOTPIXEL_REMOVE(class='form-check-input') }}
+                <div id="IMAGE_HOTPIXEL_REMOVE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Detects and corrects hot/stuck pixels on every frame using a single-frame statistical test - no dark frame or bad pixel map required</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_HOTPIXEL_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_HOTPIXEL_THOLD(class='form-control bg-secondary') }}
+            <div id="IMAGE_HOTPIXEL_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Percentage of max ADU a pixel must exceed its local same-color neighbors by to be considered hot [default: 20%]</div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -9891,6 +9919,7 @@ const field_names = [
     'CCD_BIT_DEPTH',
     'IMAGE_CALIBRATE_MANUAL_OFFSET',
     'IMAGE_CALIBRATE_HOLE_THOLD',
+    'IMAGE_HOTPIXEL_THOLD',
     'EXPOSURE_PERIOD',
     'EXPOSURE_PERIOD_DAY',
     'CAMERA_SQM__EXPOSURE',
@@ -10484,6 +10513,7 @@ const checkbox_field_names = [
     'IMAGE_CALIBRATE_DARK',
     'IMAGE_CALIBRATE_BPM',
     'IMAGE_CALIBRATE_FIX_HOLES',
+    'IMAGE_HOTPIXEL_REMOVE',
     'IMAGE_SAVE_FITS_PRE_DARK',
     'NIGHT_GRAYSCALE',
     'DAYTIME_GRAYSCALE',

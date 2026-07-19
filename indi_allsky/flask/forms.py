@@ -469,6 +469,17 @@ def IMAGE_CALIBRATE_HOLE_THOLD_validator(form, field):
         raise ValidationError('Threshold must be less than 100')
 
 
+def IMAGE_HOTPIXEL_THOLD_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Threshold must be greater than 0')
+
+    if field.data > 100:
+        raise ValidationError('Threshold must be less than 100')
+
+
 def CCD_TEMP_SCRIPT_validator(form, field):
     if not field.data:
         return
@@ -4526,6 +4537,8 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CALIBRATE_FIX_HOLES        = BooleanField('Fix Calibration Pin Holes')
     IMAGE_CALIBRATE_HOLE_THOLD       = IntegerField('Hole ADU Threshold %', validators=[IMAGE_CALIBRATE_HOLE_THOLD_validator])
     IMAGE_CALIBRATE_MANUAL_OFFSET    = IntegerField('Manual Offset', validators=[IMAGE_CALIBRATE_MANUAL_OFFSET_validator])
+    IMAGE_HOTPIXEL_REMOVE            = BooleanField('Remove Hot Pixels (no dark frame required)')
+    IMAGE_HOTPIXEL_THOLD             = IntegerField('Hot Pixel ADU Threshold %', validators=[IMAGE_HOTPIXEL_THOLD_validator])
     IMAGE_SAVE_FITS_PRE_DARK         = BooleanField('Save FITS Pre-Calibration')
     PRIVACY_MODE                     = BooleanField('Enable Privacy Mode')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
@@ -9055,6 +9068,8 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_CALIBRATE_MANUAL_OFFSET    = IntegerField('Manual Offset', validators=[IMAGE_CALIBRATE_MANUAL_OFFSET_validator])
     IMAGE_CALIBRATE_FIX_HOLES        = BooleanField('Fix Calibration Holes')
     IMAGE_CALIBRATE_HOLE_THOLD       = IntegerField('Hole ADU Threshold %', validators=[IMAGE_CALIBRATE_HOLE_THOLD_validator])
+    IMAGE_HOTPIXEL_REMOVE            = BooleanField('Remove Hot Pixels (no dark frame required)')
+    IMAGE_HOTPIXEL_THOLD             = IntegerField('Hot Pixel ADU Threshold %', validators=[IMAGE_HOTPIXEL_THOLD_validator])
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=IndiAllskyConfigForm.CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
     CONTRAST_ENHANCE_16BIT           = BooleanField('16-bit Contrast Enhance')
