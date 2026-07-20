@@ -229,10 +229,11 @@ class JsonLatestImageView(JsonView):
 
         data = {
             'latest_image' : {
-                'url'     : None,
-                'message' : no_image_message,
-                'width'   : 1,
-                'height'  : 1,
+                'url'      : None,
+                'message'  : no_image_message,
+                'width'    : 1,
+                'height'   : 1,
+                'moonmode' : False,
             },
         }
 
@@ -317,6 +318,7 @@ class JsonLatestImageView(JsonView):
             data['latest_image']['url'] = latest_image_data['url']
             data['latest_image']['width'] = latest_image_data['width']
             data['latest_image']['height'] = latest_image_data['height']
+            data['latest_image']['moonmode'] = latest_image_data['moonmode']
             data['latest_image']['message'] = ''
 
 
@@ -374,6 +376,12 @@ class JsonLatestImageView(JsonView):
             'width' : latest_image.width,
             'height' : latest_image.height,
         }
+
+        try:
+            image_data['moonmode'] = latest_image.moonmode
+        except AttributeError:
+            # view is reused for panoramas/raw images
+            image_data['moonmode'] = False
 
         return image_data
 
@@ -1184,11 +1192,13 @@ class JsonImageLoopView(JsonView):
                 data['jsqm'] = i.sqm
                 data['stars'] = i.stars
                 data['detections'] = i.detections
+                data['moonmode'] = i.moonmode
             except AttributeError:
                 # view is reused for panoramas
                 data['jsqm'] = 0
                 data['stars'] = 0
                 data['detections'] = 0
+                data['moonmode'] = False
 
 
             image_list.append(data)
