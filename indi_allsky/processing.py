@@ -1298,6 +1298,82 @@ class ImageProcessor(object):
         logger.info('Fixed %d holes in %0.4f s', hole_count, holes_elapsed_s)
 
 
+    def remove_hot_pixels(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+        if not self.config.get('IMAGE_HOTPIXEL_REMOVE'):
+            return
+
+        i_ref = self.getLatestImage()
+        self._remove_hot_pixels(i_ref)
+
+
+    def _remove_hot_pixels(self, i_ref):
+        ### detect and correct hot/stuck pixels without a dark frame or bad pixel map
+        ###
+        ### each pixel is compared to the median of its same-color neighbors (bayer
+        ### phases are filtered independently so only same-color pixels are ever
+        ### compared, using the same offset-2 relationship as _fix_holes_early()).
+        ### pixels that exceed the local median by more than IMAGE_HOTPIXEL_THOLD
+        ### percent of the sensor's max ADU are replaced with that local median.
+
+        data = i_ref.hdulist[0].data
+
+        if len(data.shape) != 2:
+            # only mono/bayer raw sensor data is supported (not pre-debayered RGB fits)
+            return
+
+
+        max_value = (2 ** self.max_bit_depth) - 1
+        thold_adu = int(max_value * (self.config.get('IMAGE_HOTPIXEL_THOLD', 20) / 100))
+
+
+        if i_ref.image_bayerpat:
+            # filter each of the 4 CFA phases independently so only same-color
+            # neighbors are ever compared, regardless of the actual bayer order
+            local_median = numpy.empty_like(data)
+            for y_off in (0, 1):
+                for x_off in (0, 1):
+                    phase = numpy.ascontiguousarray(data[y_off::2, x_off::2])
+                    local_median[y_off::2, x_off::2] = self._hotpixel_median_blur(phase)
+        else:
+            local_median = self._hotpixel_median_blur(numpy.ascontiguousarray(data))
+
+
+        excess = data.astype(numpy.float32) - local_median.astype(numpy.float32)
+        hot_mask = excess > thold_adu
+
+        hot_pixel_count = int(hot_mask.sum())
+        if not hot_pixel_count:
+            return
+
+        if hot_pixel_count > 50000:
+            logger.warning(
+                'Detected %d potential hot pixels (>%d ADU), skipping correction - check IMAGE_HOTPIXEL_THOLD',
+                hot_pixel_count,
+                thold_adu,
+            )
+            return
+
+
+        hotpixel_start = time.time()
+
+        data[hot_mask] = local_median[hot_mask]
+
+        hotpixel_elapsed_s = time.time() - hotpixel_start
+        logger.info('Removed %d hot pixels in %0.4f s (no dark frame required)', hot_pixel_count, hotpixel_elapsed_s)
+
+
+    def _hotpixel_median_blur(self, arr):
+        # cv2.medianBlur does not support uint32
+        if arr.dtype == numpy.uint32:
+            return cv2.medianBlur(arr.astype(numpy.float32), 3).astype(numpy.uint32)
+
+        return cv2.medianBlur(arr, 3)
+
+
     def calculate_8bit_adu(self):
         i_ref = self.getLatestImage()
 

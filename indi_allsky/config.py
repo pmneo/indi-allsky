@@ -261,6 +261,8 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_CALIBRATE_FIX_HOLES"     : False,
         "IMAGE_CALIBRATE_HOLE_THOLD"    : 30,
         "IMAGE_CALIBRATE_MANUAL_OFFSET" : 0,
+        "IMAGE_HOTPIXEL_REMOVE"         : False,
+        "IMAGE_HOTPIXEL_THOLD"          : 20,
         "PRIVACY_MODE"                  : False,
         "IMAGE_EXIF_PRIVACY"    : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif

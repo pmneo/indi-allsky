@@ -417,6 +417,9 @@ class ImageWorker(Process):
         self.image_processor.fix_holes_early()
 
 
+        self.image_processor.remove_hot_pixels()
+
+
         if self.config.get('IMAGE_SAVE_FITS'):
             if not self.config.get('IMAGE_SAVE_FITS_PRE_DARK'):
                 self.write_fit(i_ref, camera)
