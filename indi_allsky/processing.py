@@ -1329,7 +1329,7 @@ class ImageProcessor(object):
 
 
         max_value = (2 ** self.max_bit_depth) - 1
-        thold_adu = int(max_value * (self.config.get('IMAGE_HOTPIXEL_THOLD', 20) / 100))
+        thold_adu = int(max_value * (self.config.get('IMAGE_HOTPIXEL_THOLD', 5) / 100))
 
         is_bayer = bool(i_ref.image_bayerpat)
 
@@ -1338,7 +1338,7 @@ class ImageProcessor(object):
         excess = data.astype(numpy.float32) - local_median.astype(numpy.float32)
 
         abs_dev = numpy.abs(excess)
-        local_mad = self._hotpixel_phase_filter(abs_dev, is_bayer, lambda arr: cv2.medianBlur(arr, 3))
+        local_mad = self._hotpixel_phase_filter(abs_dev, is_bayer, lambda arr: cv2.medianBlur(arr, 5))
         sigma_local = local_mad * 1.4826
 
         hot_mask = (excess > thold_adu) & (excess > (self.HOTPIXEL_SIGMA_MULTIPLIER * sigma_local))
@@ -1380,11 +1380,13 @@ class ImageProcessor(object):
 
 
     def _hotpixel_median_blur(self, arr):
+        # ksize matches the MAD estimate's window so both statistics are
+        # computed over the same same-color neighborhood.
         # cv2.medianBlur does not support uint32
         if arr.dtype == numpy.uint32:
-            return cv2.medianBlur(arr.astype(numpy.float32), 3).astype(numpy.uint32)
+            return cv2.medianBlur(arr.astype(numpy.float32), 5).astype(numpy.uint32)
 
-        return cv2.medianBlur(arr, 3)
+        return cv2.medianBlur(arr, 5)
 
 
     # excess must clear this many local-noise-sigmas *and* the absolute ADU
