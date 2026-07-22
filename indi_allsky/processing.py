@@ -1316,8 +1316,10 @@ class ImageProcessor(object):
         ### each pixel is compared to the median of its same-color neighbors (bayer
         ### phases are filtered independently so only same-color pixels are ever
         ### compared, using the same offset-2 relationship as _fix_holes_early()).
-        ### pixels that exceed the local median by more than IMAGE_HOTPIXEL_THOLD
-        ### percent of the sensor's max ADU are replaced with that local median.
+        ### a pixel is only corrected if it exceeds both IMAGE_HOTPIXEL_THOLD percent
+        ### of the sensor's max ADU *and* HOTPIXEL_SIGMA_MULTIPLIER times the local
+        ### noise (MAD) -- the sigma gate protects bright/large stars, whose edges
+        ### have legitimate large pixel-to-pixel deviations.
 
         data = i_ref.hdulist[0].data
 
@@ -1329,21 +1331,17 @@ class ImageProcessor(object):
         max_value = (2 ** self.max_bit_depth) - 1
         thold_adu = int(max_value * (self.config.get('IMAGE_HOTPIXEL_THOLD', 20) / 100))
 
+        is_bayer = bool(i_ref.image_bayerpat)
 
-        if i_ref.image_bayerpat:
-            # filter each of the 4 CFA phases independently so only same-color
-            # neighbors are ever compared, regardless of the actual bayer order
-            local_median = numpy.empty_like(data)
-            for y_off in (0, 1):
-                for x_off in (0, 1):
-                    phase = numpy.ascontiguousarray(data[y_off::2, x_off::2])
-                    local_median[y_off::2, x_off::2] = self._hotpixel_median_blur(phase)
-        else:
-            local_median = self._hotpixel_median_blur(numpy.ascontiguousarray(data))
-
+        local_median = self._hotpixel_phase_filter(data, is_bayer, self._hotpixel_median_blur)
 
         excess = data.astype(numpy.float32) - local_median.astype(numpy.float32)
-        hot_mask = excess > thold_adu
+
+        abs_dev = numpy.abs(excess)
+        local_mad = self._hotpixel_phase_filter(abs_dev, is_bayer, lambda arr: cv2.medianBlur(arr, 3))
+        sigma_local = local_mad * 1.4826
+
+        hot_mask = (excess > thold_adu) & (excess > (self.HOTPIXEL_SIGMA_MULTIPLIER * sigma_local))
 
         hot_pixel_count = int(hot_mask.sum())
         if not hot_pixel_count:
@@ -1366,12 +1364,35 @@ class ImageProcessor(object):
         logger.info('Removed %d hot pixels in %0.4f s (no dark frame required)', hot_pixel_count, hotpixel_elapsed_s)
 
 
+    def _hotpixel_phase_filter(self, arr, is_bayer, filter_func):
+        if not is_bayer:
+            return filter_func(numpy.ascontiguousarray(arr))
+
+        # filter each of the 4 CFA phases independently so only same-color
+        # neighbors are ever compared, regardless of the actual bayer order
+        result = numpy.empty_like(arr)
+        for y_off in (0, 1):
+            for x_off in (0, 1):
+                phase = numpy.ascontiguousarray(arr[y_off::2, x_off::2])
+                result[y_off::2, x_off::2] = filter_func(phase)
+
+        return result
+
+
     def _hotpixel_median_blur(self, arr):
         # cv2.medianBlur does not support uint32
         if arr.dtype == numpy.uint32:
             return cv2.medianBlur(arr.astype(numpy.float32), 3).astype(numpy.uint32)
 
         return cv2.medianBlur(arr, 3)
+
+
+    # excess must clear this many local-noise-sigmas *and* the absolute ADU
+    # floor before a pixel is treated as hot. This keeps high-contrast but
+    # legitimate structure (star edges) from being flagged: local MAD is
+    # large there, so the sigma gate rises with it, while flat sky
+    # background (where real hot pixels stand out) keeps a small MAD.
+    HOTPIXEL_SIGMA_MULTIPLIER = 8.0
 
 
     def calculate_8bit_adu(self):
